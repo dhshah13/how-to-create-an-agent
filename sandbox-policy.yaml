@@ -1,13 +1,15 @@
-# OpenShell policy for the live demo: the ONLY network the sandbox may touch
-# is Vertex AI (plus Google's OAuth token endpoint). Everything else is blocked
-# at the kernel/L7 layer. On-theme for stage 2: even the demo host is sandboxed.
+# OpenShell policy for the live demo (verified against openshell 0.0.57).
 #
-# Schema based on OpenShell's examples/sandbox-policy-quickstart/policy.yaml.
-# Before the talk, verify two things inside the sandbox (`openshell sandbox connect`):
-#   1. `which python3`  -> adjust the binaries path below if it differs
-#   2. if you use a regional endpoint, the host is <region>-aiplatform.googleapis.com
-# OpenShell is alpha; if a field is rejected, regenerate via the policy skill in
-# the OpenShell repo's .agents/skills/ directory.
+# Network rules are PER-BINARY: python may talk to Vertex AI (and only Vertex AI),
+# git may talk to GitHub (and only GitHub). Everything else - curl, pip, any tool
+# the agent might shell out to - has zero egress.
+#
+# NOTE: the python path is the uv-managed interpreter the default sandbox image
+# ships. If the image updates, re-resolve it inside the sandbox with:
+#   readlink -f $(which python3)
+#
+# Apply to a running sandbox (network rules hot-reload):
+#   openshell policy set agent-demo --policy sandbox-policy.yaml
 
 version: 1
 
@@ -24,39 +26,31 @@ process:
   run_as_group: sandbox
 
 network_policies:
-  # NOTE on cloning: git's smart-HTTP protocol POSTs to /git-upload-pack even for
-  # a plain clone, so a "read-only" (GET-only) rule would break it. Two options:
-  #   a) clone BEFORE applying this policy (network rules are hot-reloadable), or
-  #   b) keep the github block below (read-write); pushing is still impossible
-  #      because no GitHub credentials exist inside the sandbox.
-  github_clone:
-    name: github-clone
+  vertex_ai:
+    name: vertex-ai-python-only
     endpoints:
+      - host: aiplatform.googleapis.com       # "global" endpoint; regional would be
+        port: 443                              # <region>-aiplatform.googleapis.com
+        protocol: rest
+        enforcement: enforce
+        access: read-write
+      - host: oauth2.googleapis.com            # token refresh (host-side mint_token.py
+        port: 443                              # makes this optional; kept for safety)
+        protocol: rest
+        enforcement: enforce
+        access: read-write
+    binaries:
+      - { path: /sandbox/.uv/python/cpython-3.14.3-linux-aarch64-gnu/bin/python3.14 }
+
+  github_git:
+    name: github-git-only
+    endpoints:
+      # git smart-HTTP POSTs even for fetch/clone, so this must be read-write.
+      # Pushing is still impossible: no GitHub credentials exist in the sandbox.
       - host: github.com
         port: 443
         protocol: rest
         enforcement: enforce
         access: read-write
-      - host: codeload.github.com
-        port: 443
-        protocol: rest
-        enforcement: enforce
-        access: read-write
     binaries:
-      - { path: /usr/bin/git }               # verify with `which git` in the sandbox
-
-  vertex_ai:
-    name: vertex-ai-only
-    endpoints:
-      - host: aiplatform.googleapis.com        # "global" endpoint
-        port: 443
-        protocol: rest
-        enforcement: enforce
-        access: read-write
-      - host: oauth2.googleapis.com            # ADC token refresh
-        port: 443
-        protocol: rest
-        enforcement: enforce
-        access: read-write
-    binaries:
-      - { path: /usr/local/bin/python3 }       # verify with `which python3` in the sandbox
+      - { path: /usr/bin/git }

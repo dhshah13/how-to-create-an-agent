@@ -63,30 +63,32 @@ This is also the wifi-died fallback during the talk.
 ## Sandboxed run with OpenShell (the "operate" story)
 
 [NVIDIA OpenShell](https://github.com/NVIDIA/OpenShell) confines the agent at the
-kernel level — filesystem, process, and network policy. The clean-machine flow:
-fresh sandbox → clone this repo → run the agent inside, with egress locked to
-Vertex AI (+ GitHub for the clone):
+kernel level — filesystem, process, and per-binary network policy. The verified
+flow: fresh sandbox → clone this repo → lock it down → run the agent inside, where
+**python may reach Vertex AI and git may reach GitHub — nothing else, for anything**:
 
 ```bash
-# host: mint a short-lived Vertex token (~1h) to use inside the sandbox
-gcloud auth application-default print-access-token   # copy the output
+# host (Docker must be running)
+openshell sandbox create --name agent-demo -- echo ready
+openshell sandbox exec -n agent-demo -- bash -c \
+  "cd /sandbox && git clone -q https://github.com/dhshah13/how-to-create-an-agent.git \
+   && cd how-to-create-an-agent && pip3 install -q -r requirements.txt"
+openshell policy set agent-demo --policy sandbox-policy.yaml   # AFTER clone+install
+source .env && python3 mint_token.py                           # copy the ~1h token
 
-openshell sandbox create --name agent-demo
-openshell policy set agent-demo --policy sandbox-policy.yaml
 openshell sandbox connect agent-demo
-
 # inside the sandbox:
-git clone https://github.com/dhshah13/how-to-create-an-agent.git && cd how-to-create-an-agent
-pip install -r requirements.txt
+cd /sandbox/how-to-create-an-agent
 export ANTHROPIC_VERTEX_PROJECT_ID=<your-project-id>
 export ANTHROPIC_VERTEX_ACCESS_TOKEN=<paste the token>
-python3 stage1_harness.py
+python3 check_setup.py        # verified: live Opus call from inside the cage
+curl -m 5 https://example.com # verified: blocked — curl has zero egress
 ```
 
-To run **opencode** inside the sandbox instead, use OpenShell's agent launcher
-(`openshell sandbox create -- opencode`). Note opencode's Vertex provider expects
-Google ADC or `GOOGLE_APPLICATION_CREDENTIALS` — verify in rehearsal, or simply
-run opencode on the host and keep the sandbox for executing the demo stages.
+Only a ~1h token enters the box — no keys, no gcloud, no GitHub credentials.
+The default sandbox image also ships `opencode` at `/usr/bin/opencode`; the policy
+deliberately gives it no egress (the demo agent needs the network; the coding agent
+inside doesn't). For opencode-driven development, run it on the host:
 
 ```bash
 ```
