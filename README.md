@@ -97,12 +97,13 @@ sandbox can clone the repo but can't push it — no credentials in there.
 
 ## Building this with opencode (Vertex-backed)
 
-opencode uses the same GCP auth. In a shell with the env above:
+opencode auto-detects the Vertex provider from the same env (`GOOGLE_CLOUD_PROJECT`,
+`VERTEX_LOCATION`, `GOOGLE_APPLICATION_CREDENTIALS`). Verified working:
 
 ```bash
-export GOOGLE_CLOUD_PROJECT=$ANTHROPIC_VERTEX_PROJECT_ID
-export VERTEX_LOCATION=global
-opencode                       # then /models → pick Claude (Vertex)
+source .env
+opencode                                                    # TUI: /models → Vertex
+opencode run -m "google-vertex/claude-opus-4-6@default" "hi"   # one-shot
 ```
 
 ## Demo → production: three swaps (slide 11)
