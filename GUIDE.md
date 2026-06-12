@@ -80,10 +80,14 @@ The talk runs **inside opencode**: you type prompts, opencode executes the stage
 via its bash tool, and all demo output appears in opencode's session. Everything
 below is verified live.
 
-> **One-click shortcut:** `open cockpit.command` (or double-click it in Finder).
-> It opens a fresh Terminal window, mints the token, primes the sandbox, and drops
-> you straight into opencode in the cage — steps 1–4 below, automated. The manual
-> steps remain for understanding and as the fallback.
+> **One-click shortcuts:**
+> - `open cockpit.command` — fresh Terminal window, token minted, sandbox primed,
+>   opencode running in the cage (steps 1–4 below, automated).
+> - `open cagecam.command` — second window streaming the cage's live network
+>   decisions: every `ALLOWED` (with the policy that matched) and `DENIED` (with
+>   the reason), per binary. Run both side by side — cockpit left, camera right.
+>
+> The manual steps remain for understanding and as the fallback.
 
 **1. Mint a fresh token on the host** (~1h validity — copy the output):
 
@@ -149,6 +153,7 @@ That's also the fallback if opencode editorializes instead of running a command.
 - [ ] `openshell sandbox list` → `agent-demo` Ready (if not: Part 1 takes 10 min)
 - [ ] Projector terminal: font size up, theme readable from the back
 - [ ] **T-15:** `open cockpit.command` — new window, token minted, opencode in the cage (manual path: Part 2.1–2.4)
+- [ ] `open cagecam.command` — security-camera window beside it (live ALLOWED/DENIED stream)
 - [ ] Second hidden terminal on the host: `cd ~/ppt_monday && source .env` (your plan-B + re-mint station)
 - [ ] Repo link ready to paste in the channel: `https://github.com/dhshah13/how-to-create-an-agent`
 

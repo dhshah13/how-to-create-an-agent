@@ -129,12 +129,18 @@ Run: curl -m 5 https://example.com
 Run: python3 check_setup.py
 ```
 
-curl dies (zero egress, even when an agent runs it); check_setup works. "My stage-2
-guardrails live inside the app — a clever prompt might route around them. This box
-is NVIDIA OpenShell: a kernel-level allow-list per binary — python may reach Vertex
-and only Vertex; opencode itself may reach Vertex and only Vertex. The model can't
-talk its way out of a network namespace. And this laptop's credentials aren't in
-here either — just a token that dies in an hour."
+curl dies (zero egress, even when an agent runs it); check_setup works. Now **flip
+to the cagecam window** (launched at T-15): the curl attempt is sitting there as
+`NET:OPEN DENIED ... -> example.com:443`, right above `ALLOWED python3.14 ->
+aiplatform.googleapis.com [policy:opencode_vertex]` lines from the stages.
+
+"My stage-2 guardrails live inside the app — a clever prompt might route around
+them. This box is NVIDIA OpenShell: a kernel-level allow-list per binary — python
+may reach Vertex and only Vertex; opencode itself may reach Vertex and only Vertex.
+That window is the cage's flight recorder: every connection any binary attempted,
+allowed or denied, with the policy that decided it. The model can't talk its way
+out of a network namespace. And this laptop's credentials aren't in here either —
+just a token that dies in an hour."
 
 ## 0:22 — Slide 8 / Stage 3
 
