@@ -3,10 +3,11 @@
   python3 check_setup.py
 """
 
+import os
 import sys
 import time
 
-from config import MODEL, PROJECT_ID, REGION
+from config import MODEL, PROJECT_ID, REGION, get_client
 
 
 def fail(msg, fix):
@@ -24,18 +25,21 @@ if not PROJECT_ID:
     fail("no GCP project configured",
          "export ANTHROPIC_VERTEX_PROJECT_ID=<your-project-id>")
 
-try:
-    import google.auth
-    creds, _ = google.auth.default()
-    print("  ok    found Google application-default credentials")
-except Exception:
-    fail("no Google credentials",
-         "brew install google-cloud-sdk && gcloud auth application-default login")
+if os.environ.get("ANTHROPIC_VERTEX_ACCESS_TOKEN"):
+    print("  ok    using injected access token (sandbox mode, ~1h validity)")
+else:
+    try:
+        import google.auth
+        creds, _ = google.auth.default()
+        print("  ok    found Google application-default credentials")
+    except Exception:
+        fail("no Google credentials",
+             "gcloud auth application-default login, set GOOGLE_APPLICATION_CREDENTIALS, "
+             "or inject ANTHROPIC_VERTEX_ACCESS_TOKEN=$(python3 mint_token.py)")
 
 import anthropic
-from anthropic import AnthropicVertex
 
-client = AnthropicVertex(project_id=PROJECT_ID, region=REGION)
+client = get_client()
 t0 = time.time()
 try:
     r = client.messages.create(
