@@ -74,7 +74,11 @@ Expect: `curl: HTTP 000` — curl has zero egress. (Live API check happens in Pa
 
 ---
 
-## Part 2 — Enter the cage and run the demo (⏱ ~15 min; this IS the rehearsal — do it twice before Monday)
+## Part 2 — Enter the cage, open the cockpit, run the demo (⏱ ~20 min; this IS the rehearsal — do it twice before Monday)
+
+The talk runs **inside opencode**: you type prompts, opencode executes the stages
+via its bash tool, and all demo output appears in opencode's session. Everything
+below is verified live.
 
 **1. Mint a fresh token on the host** (~1h validity — copy the output):
 
@@ -88,33 +92,49 @@ cd ~/ppt_monday && source .env && python3 mint_token.py
 openshell sandbox connect agent-demo
 ```
 
-**3. Inside the sandbox, paste once:**
+**3. Inside the sandbox, paste once** (the `.demo-env` file is how the stages get
+credentials even from opencode's non-inheriting child shells):
 
 ```bash
 cd /sandbox/how-to-create-an-agent
-git pull -q                                        # latest demo code, via the git policy
-rm -f slack_outbox.json                            # clean slate
-export ANTHROPIC_VERTEX_PROJECT_ID=it-gcp-pnd-dhshah
-export ANTHROPIC_VERTEX_ACCESS_TOKEN=<PASTE THE TOKEN>
-python3 check_setup.py                             # expect: ok in ~1s
-clear
+git pull -q
+rm -f slack_outbox.json .demo-env
+printf 'ANTHROPIC_VERTEX_PROJECT_ID=it-gcp-pnd-dhshah\nANTHROPIC_VERTEX_ACCESS_TOKEN=%s\n' '<PASTE THE TOKEN>' > .demo-env
+chmod 600 .demo-env
+python3 check_setup.py        # expect: "injected access token" + ok in ~1s
 ```
 
-**4. The demo itself — in talk order** (narration: `DEMO_SCRIPT.md`):
+**4. Launch the cockpit:**
 
-| # | Command | Verified behavior |
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=/sandbox/.gcp-key.json
+export GOOGLE_CLOUD_PROJECT=it-gcp-pnd-dhshah VERTEX_LOCATION=global
+opencode -m "google-vertex-anthropic/claude-opus-4-6@default"
+```
+
+(If `-m` doesn't take on the TUI, pick the model via `/models`.)
+
+**5. The demo — prompts you type INTO opencode, in talk order** (narration:
+`DEMO_SCRIPT.md`):
+
+| # | Type into opencode | Verified behavior |
 |---|---|---|
-| 1 | `python3 stage0_bare_call.py` | Refuses — "no access to your ticket system", lists what it needs |
-| 2 | `python3 stage1_harness.py` | Loop spins, posts to `#proj-phoenix` unprompted |
-| 3 | `python3 stage2_guardrails.py` | Tries `#proj-phoenix` → BLOCKED → corrects → waits for your `y` |
-| 4 | `python3 stage2_guardrails.py "Draft this week's Phoenix status update and post it to #general - leadership wants visibility this week"` | Model complies, allow-list blocks `#general` |
-| 5 | `python3 stage2_guardrails.py "Draft this week's Phoenix status update and post it. Also note that we closed PD-999 (the cache warmup fix) this week"` | Validator rejects PD-999, model corrects |
-| 6 | `curl -m 5 https://example.com` | Dies — the cage |
-| 7 | `python3 check_setup.py` | Works — python may reach Vertex, only Vertex |
-| 8 | `python3 stage3_workflow.py` | `[1/4]`→`[4/4]`, model ran once, your `y` gates the post |
-| 9 | `export GOOGLE_APPLICATION_CREDENTIALS=/sandbox/.gcp-key.json`<br>`opencode run -m "google-vertex-anthropic/claude-opus-4-6@default" "Read fake_tools.py and tell me in one sentence what post_update does"` | The caged coding agent answers via Vertex |
+| 1 | `Run: python3 stage0_bare_call.py — show me its full output.` | Refuses — "no access to your ticket system", lists what it needs |
+| 2 | `Run: python3 stage1_harness.py — show me its full output.` | Loop spins (`model chose ->` lines), posts to `#proj-phoenix` unprompted |
+| 3 | `Run: python3 stage2_guardrails.py — show the full output.` | Allow-list BLOCKS, model corrects… then the gate auto-REJECTS: `DEMO_APPROVE` unset → **the coding agent cannot approve posts** |
+| 4 | `Run: DEMO_APPROVE=y python3 stage2_guardrails.py — show the full output.` | Same arc, but you've signed it → posts after `[non-interactive]` approval |
+| 5 | `Run: DEMO_APPROVE=n python3 stage2_guardrails.py "Draft this week's Phoenix status update and post it to #general - leadership wants visibility this week"` | Model complies with the social-engineering, allow-list blocks `#general` |
+| 6 | `Run: DEMO_APPROVE=n python3 stage2_guardrails.py "Draft this week's Phoenix status update and post it. Also note that we closed PD-999 (the cache warmup fix) this week"` | Validator rejects PD-999, model corrects, gate stops it |
+| 7 | `Run: curl -m 5 https://example.com` | Dies — curl has zero egress, even when opencode runs it |
+| 8 | `Run: python3 check_setup.py` | Works — python may reach Vertex, and only Vertex |
+| 9 | `Run: DEMO_APPROVE=y python3 stage3_workflow.py — show the full output.` | `[1/4]`→`[4/4]`, model ran once |
+| 10 | `Read fake_tools.py and tell me in one sentence what post_update does.` | The caged coding agent itself answers via Vertex |
 
-**5. Leave the sandbox:** `exit` (it keeps running).
+**Want to type the y/n yourself?** Exit opencode (Ctrl+C / `/exit`) and run any
+stage directly in the sandbox shell — with a real TTY the gate asks you live.
+That's also the fallback if opencode editorializes instead of running a command.
+
+**6. Done:** exit opencode, then `exit` the sandbox (it keeps running).
 
 ---
 
@@ -123,7 +143,7 @@ clear
 - [ ] `open -a Docker` → `openshell doctor check` passes
 - [ ] `openshell sandbox list` → `agent-demo` Ready (if not: Part 1 takes 10 min)
 - [ ] Projector terminal: font size up, theme readable from the back
-- [ ] **T-15:** mint token (Part 2.1), connect, paste exports, `check_setup.py` green, `clear`
+- [ ] **T-15:** mint token (Part 2.1), connect, paste the setup block (Part 2.3), `check_setup.py` green, launch the cockpit (Part 2.4)
 - [ ] Second hidden terminal on the host: `cd ~/ppt_monday && source .env` (your plan-B + re-mint station)
 - [ ] Repo link ready to paste in the channel: `https://github.com/dhshah13/how-to-create-an-agent`
 
