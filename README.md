@@ -75,11 +75,19 @@ openshell policy set agent-demo --policy sandbox-policy.yaml
 openshell sandbox connect agent-demo
 
 # inside the sandbox:
-git clone <THIS_REPO_URL> && cd <repo>
+git clone https://github.com/dhshah13/how-to-create-an-agent.git && cd how-to-create-an-agent
 pip install -r requirements.txt
 export ANTHROPIC_VERTEX_PROJECT_ID=<your-project-id>
 export ANTHROPIC_VERTEX_ACCESS_TOKEN=<paste the token>
-python3 stage1_harness.py        # or: opencode .
+python3 stage1_harness.py
+```
+
+To run **opencode** inside the sandbox instead, use OpenShell's agent launcher
+(`openshell sandbox create -- opencode`). Note opencode's Vertex provider expects
+Google ADC or `GOOGLE_APPLICATION_CREDENTIALS` — verify in rehearsal, or simply
+run opencode on the host and keep the sandbox for executing the demo stages.
+
+```bash
 ```
 
 Talking point: stage-2 guardrails live *inside* the app; OpenShell is the same idea

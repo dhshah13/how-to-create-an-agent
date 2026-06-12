@@ -68,7 +68,8 @@ refactor-until-green → agent. "Can you write the steps in advance?"
 Point at `fake_tools.py`: three swaps, keep every guardrail.
 
 ## 0:29 — Slide 12
-Drop the repo link in the channel. Q&A.
+Drop the repo link in the channel: **https://github.com/dhshah13/how-to-create-an-agent**
+Q&A.
 
 ---
 
