@@ -15,6 +15,10 @@ Supporting files: `fake_tools.py` (the fake Jira/Slack world), `config.py` (Vert
 `mock_client.py` (offline mode), `check_setup.py` (pre-flight), `sandbox-policy.yaml`
 (OpenShell), `DEMO_SCRIPT.md` (minute-by-minute runbook).
 
+> **Just cloned this and want it running — or want to build your own agent from it?**
+> Start with **[SETUP.md](SETUP.md)**: offline in 2 minutes (`DEMO_MOCK=1`), live on
+> your own Vertex project in 15, caged in 20, then "make it YOUR agent".
+
 ## Setup (once)
 
 ```bash
