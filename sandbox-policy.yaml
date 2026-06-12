@@ -1,0 +1,62 @@
+# OpenShell policy for the live demo: the ONLY network the sandbox may touch
+# is Vertex AI (plus Google's OAuth token endpoint). Everything else is blocked
+# at the kernel/L7 layer. On-theme for stage 2: even the demo host is sandboxed.
+#
+# Schema based on OpenShell's examples/sandbox-policy-quickstart/policy.yaml.
+# Before the talk, verify two things inside the sandbox (`openshell sandbox connect`):
+#   1. `which python3`  -> adjust the binaries path below if it differs
+#   2. if you use a regional endpoint, the host is <region>-aiplatform.googleapis.com
+# OpenShell is alpha; if a field is rejected, regenerate via the policy skill in
+# the OpenShell repo's .agents/skills/ directory.
+
+version: 1
+
+filesystem_policy:
+  include_workdir: true
+  read_only: [/usr, /lib, /proc, /dev/urandom, /app, /etc, /var/log]
+  read_write: [/sandbox, /tmp, /dev/null]
+
+landlock:
+  compatibility: best_effort
+
+process:
+  run_as_user: sandbox
+  run_as_group: sandbox
+
+network_policies:
+  # NOTE on cloning: git's smart-HTTP protocol POSTs to /git-upload-pack even for
+  # a plain clone, so a "read-only" (GET-only) rule would break it. Two options:
+  #   a) clone BEFORE applying this policy (network rules are hot-reloadable), or
+  #   b) keep the github block below (read-write); pushing is still impossible
+  #      because no GitHub credentials exist inside the sandbox.
+  github_clone:
+    name: github-clone
+    endpoints:
+      - host: github.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: read-write
+      - host: codeload.github.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: read-write
+    binaries:
+      - { path: /usr/bin/git }               # verify with `which git` in the sandbox
+
+  vertex_ai:
+    name: vertex-ai-only
+    endpoints:
+      - host: aiplatform.googleapis.com        # "global" endpoint
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: read-write
+      - host: oauth2.googleapis.com            # ADC token refresh
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: read-write
+    binaries:
+      - { path: /usr/local/bin/python3 }       # verify with `which python3` in the sandbox

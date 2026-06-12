@@ -1,0 +1,4 @@
+__pycache__/
+slack_outbox.json
+.env
+*.pyc
