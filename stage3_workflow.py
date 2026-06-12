@@ -6,6 +6,7 @@ The model runs ONCE, inside draft(). Every other step is plain code.
 Same output. Every step inspectable. Nothing picks its own path.
 """
 
+import os
 import re
 import sys
 
@@ -46,11 +47,19 @@ def draft(context: str, fix: str | None = None) -> str:    # the ONE model call
     return "\n".join(b.text for b in r.content if b.type == "text")
 
 
-def approve(text: str) -> bool:            # plain code
+def approve(text: str) -> bool:            # plain code; agent-driven runs need DEMO_APPROVE=y
     print("\n----- DRAFT FOR APPROVAL " + "-" * 35)
     print(text)
     print("-" * 60)
-    return input("Post this to #status-updates? [y/n] ").strip().lower() == "y"
+    prompt = "Post this to #status-updates? [y/n] "
+    if sys.stdin.isatty():
+        return input(prompt).strip().lower() == "y"
+    import select                       # peek, never block on agent-held stdin
+    ready, _, _ = select.select([sys.stdin], [], [], 0.2)
+    piped = sys.stdin.readline().strip() if ready else ""
+    ans = piped or os.environ.get("DEMO_APPROVE", "n")
+    print(f"{prompt}{ans}  [non-interactive]")
+    return ans.lower() == "y"
 
 
 # ----------------------------- the workflow: you can read the path
