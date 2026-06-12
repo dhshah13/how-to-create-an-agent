@@ -18,6 +18,11 @@ openshell sandbox exec -n agent-demo -- bash -c \
 # lock it down AFTER clone+install (clone/pip need the default egress)
 openshell policy set agent-demo --policy sandbox-policy.yaml
 
+# give the caged opencode its credentials (SA key; sandbox dies after the talk)
+openshell sandbox upload agent-demo \
+  ~/.config/gcloud/keys/it-gcp-pnd-dhshah-compute.json /sandbox/.gcp-key.json
+openshell sandbox exec -n agent-demo -- chmod 600 /sandbox/.gcp-key.json
+
 python3 mint_token.py                           # copy the output (~1h validity)
 ```
 
@@ -128,9 +133,22 @@ refactor-until-green → agent. "Can you write the steps in advance?"
 
 ## 0:27 — Slide 11 (demo → production)
 Point at `fake_tools.py`: three swaps, keep every guardrail.
-If asked "how did you build this?" — opencode, driven by the same Vertex Opus
-(`opencode run -m "google-vertex/claude-opus-4-6@default"`), and it ships inside
-this sandbox image too (`/usr/bin/opencode`).
+
+**The opencode beat (verified live — use here or in Q&A):** "How did I build this?
+With a coding agent — opencode — driven by the same Opus on Vertex. And it runs in
+this cage too." From the sandbox shell:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=/sandbox/.gcp-key.json
+opencode run -m "google-vertex-anthropic/claude-opus-4-6@default" \
+  "Read fake_tools.py and tell me in one sentence what post_update does"
+```
+
+"That's a full coding agent — the stage-1 loop with file tools — inside a kernel
+sandbox that lets it reach Vertex and nothing else. It tried npm on startup; the
+cage said no; it didn't care. Agents all the way down, a cage around all of it."
+(Note: the image ships opencode 1.2.18 — provider is `google-vertex-anthropic/...`;
+your host's 1.4.9 calls it `google-vertex/...`.)
 
 ## 0:29 — Slide 12
 Drop the repo link in the channel: **https://github.com/dhshah13/how-to-create-an-agent**
@@ -149,3 +167,12 @@ Drop the repo link in the channel: **https://github.com/dhshah13/how-to-create-a
 | Stage 1 asks instead of posting | Run it again — or embrace it: "Opus is cautious; smaller models won't be." |
 | Typed `n` at the approval | Agent stops and says so. "That's the guardrail working." Rerun. |
 | You forgot to delete old posts | `rm -f slack_outbox.json` between rehearsals. |
+
+## After the talk
+
+```bash
+openshell sandbox delete agent-demo    # takes the uploaded SA key with it
+```
+
+Then rotate both service-account keys in the GCP console (they've been through
+chat/Downloads) and re-download fresh ones to `~/.config/gcloud/keys/`.

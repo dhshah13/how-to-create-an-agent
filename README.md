@@ -85,27 +85,42 @@ python3 check_setup.py        # verified: live Opus call from inside the cage
 curl -m 5 https://example.com # verified: blocked — curl has zero egress
 ```
 
-Only a ~1h token enters the box — no keys, no gcloud, no GitHub credentials.
-The default sandbox image also ships `opencode` at `/usr/bin/opencode`; the policy
-deliberately gives it no egress (the demo agent needs the network; the coding agent
-inside doesn't). For opencode-driven development, run it on the host:
-
-```bash
-```
+The demo stages need only a ~1h token inside the box — no keys, no gcloud, no
+GitHub credentials.
 
 Talking point: stage-2 guardrails live *inside* the app; OpenShell is the same idea
 enforced *outside* the process, where the model can't talk its way around it. The
-sandbox can clone the repo but can't push it — no credentials in there.
+sandbox can clone the repo but can't push it — no credentials for that in there.
 
-## Building this with opencode (Vertex-backed)
+## opencode in the cage (verified)
+
+The sandbox image ships opencode at `/usr/bin/opencode`, and the policy grants its
+binary exactly three hosts: Vertex AI, Google auth, and the models.dev catalog (its
+npm update probe stays blocked — it tolerates that). It needs a service-account key
+(Google's Node auth doesn't take bare tokens):
+
+```bash
+# host
+openshell sandbox upload agent-demo /path/to/sa-key.json /sandbox/.gcp-key.json
+
+# inside the sandbox
+export GOOGLE_APPLICATION_CREDENTIALS=/sandbox/.gcp-key.json
+export GOOGLE_CLOUD_PROJECT=<your-project-id>  VERTEX_LOCATION=global
+opencode run -m "google-vertex-anthropic/claude-opus-4-6@default" "hi"
+```
+
+Delete the sandbox after the demo (`openshell sandbox delete agent-demo`) — the key
+goes with it. The image's opencode 1.2.18 names the provider `google-vertex-anthropic/...`.
+
+## opencode on the host (development)
 
 opencode auto-detects the Vertex provider from the same env (`GOOGLE_CLOUD_PROJECT`,
 `VERTEX_LOCATION`, `GOOGLE_APPLICATION_CREDENTIALS`). Verified working:
 
 ```bash
 source .env
-opencode                                                    # TUI: /models → Vertex
-opencode run -m "google-vertex/claude-opus-4-6@default" "hi"   # one-shot
+opencode                                                       # TUI: /models → Vertex
+opencode run -m "google-vertex/claude-opus-4-6@default" "hi"   # host 1.4.9 naming
 ```
 
 ## Demo → production: three swaps (slide 11)

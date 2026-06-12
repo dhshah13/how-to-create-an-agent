@@ -54,3 +54,31 @@ network_policies:
         access: read-write
     binaries:
       - { path: /usr/bin/git }
+
+  # opencode-in-the-cage: the coding agent may reach Vertex (inference), Google
+  # auth (its SA key -> token exchange), and models.dev (model catalog). Nothing
+  # else - no package registries, no telemetry, no web.
+  # /usr/bin/opencode is a node launcher; these are the real executing binaries.
+  opencode_vertex:
+    name: opencode-vertex-only
+    endpoints:
+      - host: aiplatform.googleapis.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: read-write
+      - host: oauth2.googleapis.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: read-write
+      - host: models.dev
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: read-only
+    binaries:
+      # kernel-resolved executing binary (found via `openshell logs` denial entries;
+      # /usr/bin/opencode is a node launcher that spawns this). opencode also probes
+      # registry.npmjs.org for updates - deliberately left blocked; it tolerates it.
+      - { path: /usr/lib/node_modules/opencode-ai/bin/.opencode }
