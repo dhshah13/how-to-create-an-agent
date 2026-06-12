@@ -9,6 +9,24 @@ Reads:
 
 import os
 
+
+def _load_demo_env():
+    """Agent-driven shells (e.g. opencode's bash tool) may not inherit your
+    exports. Fall back to a .demo-env file next to this script: KEY=VALUE lines.
+    Real env vars always win."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".demo-env")
+    if not os.path.exists(path):
+        return
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip())
+
+
+_load_demo_env()
+
 MODEL = os.environ.get("DEMO_MODEL", "claude-opus-4-6")
 PROJECT_ID = os.environ.get("ANTHROPIC_VERTEX_PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT")
 REGION = os.environ.get("CLOUD_ML_REGION") or os.environ.get("VERTEX_LOCATION") or "global"
