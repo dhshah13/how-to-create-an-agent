@@ -80,6 +80,11 @@ The talk runs **inside opencode**: you type prompts, opencode executes the stage
 via its bash tool, and all demo output appears in opencode's session. Everything
 below is verified live.
 
+> **One-click shortcut:** `open cockpit.command` (or double-click it in Finder).
+> It opens a fresh Terminal window, mints the token, primes the sandbox, and drops
+> you straight into opencode in the cage — steps 1–4 below, automated. The manual
+> steps remain for understanding and as the fallback.
+
 **1. Mint a fresh token on the host** (~1h validity — copy the output):
 
 ```bash
@@ -143,7 +148,7 @@ That's also the fallback if opencode editorializes instead of running a command.
 - [ ] `open -a Docker` → `openshell doctor check` passes
 - [ ] `openshell sandbox list` → `agent-demo` Ready (if not: Part 1 takes 10 min)
 - [ ] Projector terminal: font size up, theme readable from the back
-- [ ] **T-15:** mint token (Part 2.1), connect, paste the setup block (Part 2.3), `check_setup.py` green, launch the cockpit (Part 2.4)
+- [ ] **T-15:** `open cockpit.command` — new window, token minted, opencode in the cage (manual path: Part 2.1–2.4)
 - [ ] Second hidden terminal on the host: `cd ~/ppt_monday && source .env` (your plan-B + re-mint station)
 - [ ] Repo link ready to paste in the channel: `https://github.com/dhshah13/how-to-create-an-agent`
 
