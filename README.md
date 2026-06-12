@@ -28,7 +28,8 @@ pip3 install -r requirements.txt
 # 3. Point at your project
 export ANTHROPIC_VERTEX_PROJECT_ID=<your-gcp-project-id>
 export CLOUD_ML_REGION=global          # or us-east5 etc. if your org requires it
-export DEMO_MODEL=claude-opus-4-8      # any Opus your project has enabled
+export DEMO_MODEL=claude-opus-4-6      # whichever Opus your project has enabled
+                                       # (claude-sonnet-4-6 = faster fallback)
 
 # 4. Verify
 python3 check_setup.py

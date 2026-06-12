@@ -9,7 +9,7 @@ Reads:
 
 import os
 
-MODEL = os.environ.get("DEMO_MODEL", "claude-opus-4-8")
+MODEL = os.environ.get("DEMO_MODEL", "claude-opus-4-6")
 PROJECT_ID = os.environ.get("ANTHROPIC_VERTEX_PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT")
 REGION = os.environ.get("CLOUD_ML_REGION") or os.environ.get("VERTEX_LOCATION") or "global"
 

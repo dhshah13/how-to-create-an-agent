@@ -12,11 +12,16 @@ Messages API for the four stage scripts:
 
 from types import SimpleNamespace
 
-HALLUCINATED = """*Phoenix Team - Weekly Status*
+# Matches observed live behavior of Opus/Sonnet 4.6: they refuse to invent
+# tickets and ask for the data instead. (Older/smaller models bluffed here.)
+STAGE0_REPLY = """I'd love to help, but I don't have access to your team's ticket \
+system, chat, or any internal data about what the Phoenix team shipped this week.
 
-Shipped: PHX-204 (Atlas migration cutover) and PHX-207 (new billing webhooks).
-In progress: PHX-211 dark-mode rollout, on track for Friday.
-Blocked: nothing to report. Great velocity this week, team!"""
+To draft an accurate update, could you share:
+- Ticket IDs and their status (shipped / in progress / blocked)
+- Any notable wins or blockers from team chat
+
+Once you provide those, I can shape them into a polished status update."""
 
 BAD_DRAFT = """*Phoenix team status - Sprint 24*
 
@@ -58,7 +63,7 @@ class _Messages:
             prompt = str(messages[0]["content"])
             if "ONLY the data below" in prompt:        # stage 3 draft()
                 return _resp([_text(GOOD_DRAFT)], "end_turn")
-            return _resp([_text(HALLUCINATED)], "end_turn")   # stage 0
+            return _resp([_text(STAGE0_REPLY)], "end_turn")   # stage 0
 
         results = _tool_results(messages)
         n = len(results)
