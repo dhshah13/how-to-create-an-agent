@@ -3,3 +3,4 @@ slack_outbox.json
 .env
 .demo-env
 *.pyc
+SPEECH.md
